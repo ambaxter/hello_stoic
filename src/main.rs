@@ -70,6 +70,7 @@ async fn enchiridion_response(
         let response = p404().await?;
         response.into_response(&req)
     }
+
 }
 
 #[actix_web::main]

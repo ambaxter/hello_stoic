@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-stoic-deployment
+  labels:
+    app: hello_stoic
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hello_stoic
+  template:
+    metadata:
+      labels:
+        app: hello_stoic
+    spec:
+      containers:
+        - name: hello-stoic
+          image: ambaxter/hello_stoic:1
+          ports:
+            - containerPort: 8080
