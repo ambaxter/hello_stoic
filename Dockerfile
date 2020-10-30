@@ -20,7 +20,10 @@ COPY static ./static
 RUN cargo install --target x86_64-unknown-linux-musl --path .
 
 # 3: Copy the exe and extra files ("static") to an empty Docker image
-FROM scratch
+FROM rust:1.47
+RUN apt-get update && \
+    apt-get dist-upgrade -y && \
+    apt-get install -y musl-tools
 COPY --from=builder /usr/local/cargo/bin/hello_stoic .
 COPY static ./static
 USER 1000

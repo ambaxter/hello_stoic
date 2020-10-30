@@ -16,13 +16,13 @@ spec:
     spec:
       containers:
         - name: hello-stoic
-          image: ambaxter/hello_stoic:1
+          image: ambaxter/hello_stoic:5
           ports:
             - containerPort: 8080
               protocol: TCP
           readinessProbe:
             initialDelaySeconds: 5
             httpGet:
-              path: /liveness
+              path: /readiness
               port: 8080
             periodSeconds: 5
