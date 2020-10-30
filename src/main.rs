@@ -1,14 +1,13 @@
-#![feature(proc_macro_hygiene)]
-
 use actix_files as fs;
 use actix_web::http::{header, Method, StatusCode};
 use actix_web::{
     error, get, guard, middleware, web, App, Error, HttpRequest, HttpResponse, HttpServer, Result,
 };
 use lazy_static::lazy_static;
-use maud::html;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::{env, io};
+use actix_web::dev::Service;
+
 mod texts;
 
 /// favicon handler
@@ -43,37 +42,24 @@ async fn liveness() -> Result<HttpResponse> {
         .body("Ok"))
 }
 
-fn get_p404() -> &'static str {
-    lazy_static! {
-        static ref P404: String = html! {
-            p { "No results found" }
-        }
-        .into_string();
-    }
-    &P404
-}
-
-async fn p404() -> Result<HttpResponse> {
-    Ok(HttpResponse::build(StatusCode::NOT_FOUND)
-        .content_type("text/html; charset=utf-8")
-        .body(get_p404()))
+async fn p404() -> Result<fs::NamedFile> {
+    Ok(fs::NamedFile::open("static/404.html")?.set_status_code(StatusCode::NOT_FOUND))
 }
 
 async fn enchiridion_response(
     req: HttpRequest,
     web::Path((chapter,)): web::Path<(usize,)>,
-) -> HttpResponse {
+) -> Result<HttpResponse> {
     println!("{:?}", req);
 
     let e = texts::extract_enchiridion();
     if let Some(chapter_text) = e.get(chapter - 1) {
-        HttpResponse::Ok()
+        Ok(HttpResponse::Ok()
             .content_type("text/plain; charset=utf-8")
-            .body(*chapter_text)
+            .body(*chapter_text))
     } else {
-        HttpResponse::build(StatusCode::NOT_FOUND)
-            .content_type("text/html; charset=utf-8")
-            .body(get_p404())
+        let response = p404().await?;
+        response.into_response(&req)
     }
 }
 
