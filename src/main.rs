@@ -7,7 +7,7 @@ use lazy_static::lazy_static;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::{env, io};
 use actix_web::dev::Service;
-
+use gethostname::gethostname;
 mod texts;
 
 /// favicon handler
@@ -42,6 +42,15 @@ async fn liveness() -> Result<HttpResponse> {
         .body("Ok"))
 }
 
+/// hostname handler
+#[get("/hostname")]
+async fn hostname() -> Result<HttpResponse> {
+    Ok(HttpResponse::Ok()
+        .content_type("text/plain; charset=utf-8")
+        .body(gethostname().to_str().unwrap().to_owned()))
+}
+
+
 async fn p404() -> Result<fs::NamedFile> {
     Ok(fs::NamedFile::open("static/404.html")?.set_status_code(StatusCode::NOT_FOUND))
 }
@@ -75,6 +84,7 @@ async fn main() -> io::Result<()> {
             .service(favicon)
             .service(health)
             .service(liveness)
+            .service(hostname)
             .service(
                 web::resource("/enchiridion/{chapter}").route(web::get().to(enchiridion_response)),
             )
