@@ -19,3 +19,10 @@ spec:
           image: ambaxter/hello_stoic:1
           ports:
             - containerPort: 8080
+              protocol: TCP
+          readinessProbe:
+            initialDelaySeconds: 5
+            httpGet:
+              path: /liveness
+              port: 8080
+            periodSeconds: 5

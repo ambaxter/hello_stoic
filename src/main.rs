@@ -42,6 +42,14 @@ async fn liveness() -> Result<HttpResponse> {
         .body("Ok"))
 }
 
+/// readiness handler
+#[get("/readiness")]
+async fn readiness() -> Result<HttpResponse> {
+    Ok(HttpResponse::Ok()
+        .content_type("text/plain; charset=utf-8")
+        .body("Ok"))
+}
+
 /// hostname handler
 #[get("/hostname")]
 async fn hostname() -> Result<HttpResponse> {
@@ -85,6 +93,7 @@ async fn main() -> io::Result<()> {
             .service(favicon)
             .service(health)
             .service(liveness)
+            .service(readiness)
             .service(hostname)
             .service(
                 web::resource("/enchiridion/{chapter}").route(web::get().to(enchiridion_response)),
