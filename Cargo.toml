@@ -1,0 +1,16 @@
+[package]
+name = "hello_stoic"
+version = "0.1.0"
+authors = ["Adam Baxter <ambaxter@users.noreply.github.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-web = "3.2.0"
+actix-files = "0.3"
+actix-utils = "2"
+env_logger = "0.7"
+maud = "*"
+regex = "1.4.1"
+lazy_static = "1.4.0"
