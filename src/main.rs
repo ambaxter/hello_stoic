@@ -7,14 +7,40 @@ use actix_web::{
 };
 use lazy_static::lazy_static;
 use maud::html;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::{env, io};
-
 mod texts;
 
 /// favicon handler
 #[get("/favicon.ico")]
 async fn favicon() -> Result<fs::NamedFile> {
     Ok(fs::NamedFile::open("static/favicon.ico")?)
+}
+
+/// health handler
+#[get("/health")]
+async fn health() -> Result<HttpResponse> {
+    lazy_static! {
+        static ref HEALTH_STAT: AtomicUsize = AtomicUsize::new(0);
+    }
+    let current_health = HEALTH_STAT.fetch_add(1, Ordering::Relaxed);
+    if current_health < 5 {
+        Ok(HttpResponse::Ok()
+            .content_type("text/plain; charset=utf-8")
+            .body(format!("Ok - {}", current_health)))
+    } else {
+        Ok(HttpResponse::InternalServerError()
+            .content_type("text/plain; charset=utf-8")
+            .body("Definitely Not Ok"))
+    }
+}
+
+/// health handler
+#[get("/liveness")]
+async fn liveness() -> Result<HttpResponse> {
+    Ok(HttpResponse::Ok()
+        .content_type("text/plain; charset=utf-8")
+        .body("Ok"))
 }
 
 fn get_p404() -> &'static str {
@@ -42,7 +68,7 @@ async fn enchiridion_response(
     let e = texts::extract_enchiridion();
     if let Some(chapter_text) = e.get(chapter - 1) {
         HttpResponse::Ok()
-            .content_type("text/plain")
+            .content_type("text/plain; charset=utf-8")
             .body(*chapter_text)
     } else {
         HttpResponse::build(StatusCode::NOT_FOUND)
@@ -61,6 +87,8 @@ async fn main() -> io::Result<()> {
             .wrap(middleware::Logger::default())
             // register favicon
             .service(favicon)
+            .service(health)
+            .service(liveness)
             .service(
                 web::resource("/enchiridion/{chapter}").route(web::get().to(enchiridion_response)),
             )
