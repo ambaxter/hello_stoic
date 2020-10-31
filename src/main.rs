@@ -6,8 +6,10 @@ use actix_web::{
 use lazy_static::lazy_static;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::{env, io};
+use std::path::PathBuf;
 use actix_web::dev::Service;
 use gethostname::gethostname;
+use structopt::StructOpt;
 mod texts;
 
 /// favicon handler
@@ -81,10 +83,22 @@ async fn enchiridion_response(
 
 }
 
+#[derive(Debug, StructOpt)]
+struct Opt {
+  #[structopt(default_value="0.0.0.0:8080")]
+  bind_address: String,
+  secret_key: Option<String>,
+  config_key: Option<String>,
+  config_map_file: Option<PathBuf>,
+  secret_map_file: Option<PathBuf>
+}
+
 #[actix_web::main]
 async fn main() -> io::Result<()> {
     env::set_var("RUST_LOG", "actix_web=debug,actix_server=info");
     env_logger::init();
+    let opt = Opt::from_args();
+  println!("{:?}", opt);
 
     HttpServer::new(|| {
         App::new()
@@ -109,7 +123,7 @@ async fn main() -> io::Result<()> {
                     ),
             )
     })
-    .bind("0.0.0.0:8080")?
+    .bind(opt.bind_address)?
     .run()
     .await
 }
