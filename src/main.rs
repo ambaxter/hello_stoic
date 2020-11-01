@@ -1,17 +1,12 @@
 use actix_files as fs;
-use actix_web::dev::Service;
-use actix_web::http::{header, Method, StatusCode};
-use actix_web::rt::blocking::CpuFuture;
+use actix_web::http::{StatusCode};
 use actix_web::{
-    error, get, guard, middleware, web, App, Error, HttpRequest, HttpResponse, HttpServer, Result,
+    get, guard, middleware, web, App, HttpRequest, HttpResponse, HttpServer, Result,
 };
 use gethostname::gethostname;
 use lazy_static::lazy_static;
-use std::future::Future;
-use std::path::PathBuf;
-use std::pin::Pin;
+use std::path::{PathBuf, Path};
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::Mutex;
 use std::{env, io};
 use structopt::StructOpt;
 
@@ -98,6 +93,8 @@ struct Opt {
     secret_key: Option<String>,
     #[structopt(long, env = "ST_CONFIG_KEY")]
     config_key: Option<String>,
+    #[structopt(long, env = "ST_CONFIG_FILE")]
+    config_file: Option<PathBuf>,
     #[structopt(long, env = "ST_CONFIG_MAP_FILE")]
     config_map_file: Option<PathBuf>,
     #[structopt(long, env = "ST_SECRET_MAP_FILE")]
@@ -117,9 +114,9 @@ impl Opt {
         }
     }
 
-    fn file_response(option: &Option<PathBuf>) -> Result<fs::NamedFile> {
+    fn file_response<T: AsRef<Path>>(option: &Option<T>) -> Result<fs::NamedFile> {
         if let Some(p) = option {
-            Ok(fs::NamedFile::open(p)?)
+            Ok(fs::NamedFile::open(p.as_ref())?)
         } else {
             resource_404()
         }
@@ -132,6 +129,10 @@ async fn secret_key(data: web::Data<Opt>) -> Result<HttpResponse> {
 
 async fn config_key(data: web::Data<Opt>) -> Result<HttpResponse> {
     Opt::str_response(&data.config_key)
+}
+
+async fn config_file(data: web::Data<Opt>) -> Result<fs::NamedFile> {
+    Opt::file_response(&data.config_file)
 }
 
 async fn config_map_file(data: web::Data<Opt>) -> Result<fs::NamedFile> {
@@ -150,6 +151,12 @@ async fn main() -> io::Result<()> {
     let data = opt.clone();
     println!("{:?}", opt);
 
+    if let Some(config_file) = &opt.config_file {
+        if !config_file.as_path().exists() {
+            std::fs::copy("static/enchiridion.txt", config_file)?;
+        }
+    }
+
     HttpServer::new(move || {
         App::new()
             .data(data.clone())
@@ -165,6 +172,7 @@ async fn main() -> io::Result<()> {
             )
             .service(web::resource("/config").route(web::get().to(config_key)))
             .service(web::resource("/secret").route(web::get().to(secret_key)))
+            .service(web::resource("/config_file").route(web::get().to(config_file)))
             .service(web::resource("/config_map_file").route(web::get().to(config_map_file)))
             .service(web::resource("/config_secret_file").route(web::get().to(secret_map_file)))
             .default_service(

@@ -26,6 +26,7 @@ RUN apt-get update && \
     apt-get install -y musl-tools
 COPY --from=builder /usr/local/cargo/bin/hello_stoic .
 COPY static ./static
-USER 1000
+RUN mkdir /data
+#USER 1000
 CMD ["./hello_stoic"]
 EXPOSE 8080

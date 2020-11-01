@@ -20,7 +20,7 @@ spec:
             claimName: hello-stoic-pvc
       containers:
         - name: hello-stoic
-          image: ambaxter/hello_stoic:6
+          image: ambaxter/hello_stoic:12
           env:
             - name: ST_CONFIG_KEY
               value: config
@@ -29,6 +29,8 @@ spec:
                 secretKeyRef:
                   name: basic-secret
                   key: mysecret
+            - name: ST_CONFIG_FILE
+              value: /data/enchiridion.txt
           volumeMounts:
             - name: hello-stoic-data
               mountPath: /data
