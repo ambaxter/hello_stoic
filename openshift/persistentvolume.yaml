@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: hostpv
+  labels:
+    type: local
+  spec:
+    capacity:
+      storage: 8Gi
+    volumeMode: Filesystem
+    accessModes:
+      - ReadWriteOnce
+    persistentVolumeReclaimPolicy: Recycle
+    storageClassName: ssd
+    hostPath:
+      path: "/mnt/data"

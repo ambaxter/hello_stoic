@@ -14,9 +14,24 @@ spec:
       labels:
         app: hello_stoic
     spec:
+      volumes:
+        - name: hello-stoic-data
+          persistentVolumeClaim:
+            claimName: hello-stoic-pvc
       containers:
         - name: hello-stoic
-          image: ambaxter/hello_stoic:5
+          image: ambaxter/hello_stoic:6
+          env:
+            - name: ST_CONFIG_KEY
+              value: config
+            - name: ST_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: basic-secret
+                  key: mysecret
+          volumeMounts:
+            - name: hello-stoic-data
+              mountPath: /data
           ports:
             - containerPort: 8080
               protocol: TCP
