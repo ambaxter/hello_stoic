@@ -102,8 +102,6 @@ struct Opt {
     config_map_file: Option<PathBuf>,
     #[structopt(long, env = "ST_SECRET_MAP_FILE")]
     secret_map_file: Option<PathBuf>,
-    #[structopt(long, env = "ST_CONFIG_FILE")]
-    config_file: Option<PathBuf>,
 }
 
 impl Opt {
@@ -140,10 +138,6 @@ async fn config_map_file(data: web::Data<Opt>) -> Result<fs::NamedFile> {
     Opt::file_response(&data.config_map_file)
 }
 
-async fn config_file(data: web::Data<Opt>) -> Result<fs::NamedFile> {
-    Opt::file_response(&data.config_file)
-}
-
 async fn secret_map_file(data: web::Data<Opt>) -> Result<fs::NamedFile> {
     Opt::file_response(&data.secret_map_file)
 }
@@ -173,7 +167,6 @@ async fn main() -> io::Result<()> {
             .service(web::resource("/secret").route(web::get().to(secret_key)))
             .service(web::resource("/config_map_file").route(web::get().to(config_map_file)))
             .service(web::resource("/config_secret_file").route(web::get().to(secret_map_file)))
-            .service(web::resource("/config_file").route(web::get().to(config_file)))
             .default_service(
                 web::resource("")
                     .route(web::get().to(async_404))
