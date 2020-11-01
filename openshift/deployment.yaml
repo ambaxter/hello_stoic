@@ -18,9 +18,15 @@ spec:
         - name: hello-stoic-data
           persistentVolumeClaim:
             claimName: hello-stoic-pvc
+        - name: config
+          configMap:
+            name: hello-stoic-configmap
+        - name: secret
+          secret:
+            secretName: basic-secret
       containers:
         - name: hello-stoic
-          image: ambaxter/hello_stoic:12
+          image: ambaxter/hello_stoic:14
           env:
             - name: ST_CONFIG_KEY
               value: config
@@ -31,9 +37,19 @@ spec:
                   key: mysecret
             - name: ST_CONFIG_FILE
               value: /data/enchiridion.txt
+            - name: ST_CONFIG_MAP_FILE
+              value: /etc/hello-stoic.d/keys.txt
+            - name: ST_SECRET_MAP_FILE
+              value: /etc/hello-stoic.secret/anothersecret.txt
           volumeMounts:
             - name: hello-stoic-data
               mountPath: /data
+            - name: config
+              mountPath: /etc/hello-stoic.d
+              readOnly: true
+            - name: secret
+              mountPath: /etc/hello-stoic.secret
+              readOnly: true
           ports:
             - containerPort: 8080
               protocol: TCP
